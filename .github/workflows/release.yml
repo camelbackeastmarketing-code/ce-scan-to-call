@@ -1,0 +1,39 @@
+name: Release
+
+# Push a tag like v1.1.1 and this builds ce-scan-to-call.zip and publishes a
+# GitHub release. Sites running the plugin then show "Update available".
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify version numbers match the tag
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          MAIN=ce-scan-to-call/ce-scan-to-call.php
+          HDR=$(grep -m1 -E '^ \* Version:' "$MAIN" | sed -E 's/.*Version:[[:space:]]*//' | tr -d '[:space:]')
+          CONST=$(grep -m1 "define( 'CESC_VERSION'" "$MAIN" | sed -E "s/.*'CESC_VERSION', '([^']+)'.*/\1/")
+          STABLE=$(grep -m1 '^Stable tag:' ce-scan-to-call/readme.txt | sed -E 's/Stable tag:[[:space:]]*//' | tr -d '[:space:]')
+          echo "tag=$TAG header=$HDR constant=$CONST readme=$STABLE"
+          if [ "$TAG" != "$HDR" ] || [ "$TAG" != "$CONST" ] || [ "$TAG" != "$STABLE" ]; then
+            echo "::error::Version mismatch. Tag, plugin header, CESC_VERSION and readme.txt Stable tag must all match."
+            exit 1
+          fi
+
+      - name: Build plugin zip
+        run: zip -rq ce-scan-to-call.zip ce-scan-to-call -x '*.DS_Store'
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" ce-scan-to-call.zip --title "$GITHUB_REF_NAME" --generate-notes
