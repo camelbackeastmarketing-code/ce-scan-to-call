@@ -4,7 +4,7 @@ Tags: phone, tel links, qr code, popup, click to call
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 
 Desktop visitors who click a phone link get a QR-code popup so they can scan and call from their phone.
@@ -19,7 +19,14 @@ Phone links (tel:) work on phones but do nothing useful on most desktop computer
 * Accessible: Esc / click-outside / X to close, keyboard focus trap, focus returns to the link.
 * The popup makes no external requests. Bundles qrcode-generator (MIT) and Plugin Update Checker (MIT); the update check contacts GitHub from the WordPress admin only.
 * Add ?cesc_test=1 to any URL to force the popup on any device for testing.
-* Developers: filter `cesc_config` to override any setting in code.
+* Developers: filter `cesc_config` to override any setting in code, and `cesc_contact_box` to change or remove the settings-page contact box.
+
+= What it does not do =
+
+* It does not fix a broken or partial phone link. On a phone, the button still dials whatever the link says. Fix the link on your site (for example `tel:+1XXXXXXXXXX`).
+* It does not change the numbers on your pages. The popup number override only changes the number shown in the popup.
+* It does not choose your number. If a site shows several numbers and you want one, fix them on the site itself.
+* Fix the site first. This plugin is a safety net, not a substitute.
 
 == Installation ==
 
@@ -28,6 +35,12 @@ Phone links (tel:) work on phones but do nothing useful on most desktop computer
 3. Go to Settings > Scan-to-Call, set your button link and colors, and save.
 
 == Changelog ==
+
+= 1.2.0 =
+* Settings page sidebar: plain-language "what it does / what it doesn't do" notes, plus an optional Camelback East contact box with a QR code (drawn in the browser, no external requests). Hide the contact box under General settings.
+* "Phone number override" is now labeled as display-only, with a reminder that it does not fix phone links on the site.
+* Settings page placeholder number is now +16027301024.
+* Added license.txt (GPL v2) to the plugin folder.
 
 = 1.1.0 =
 * Automatic updates from GitHub releases (normal "Update available" notice on the Plugins screen).

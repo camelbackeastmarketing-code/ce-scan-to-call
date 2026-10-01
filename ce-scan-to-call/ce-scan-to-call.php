@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       CE Scan-to-Call
  * Description:       Desktop visitors who click a phone (tel:) link get a QR-code popup so they can scan and call from their phone. Phones and tablets keep normal tap-to-call.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Camelback East Marketing
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CESC_VERSION', '1.1.0' );
+define( 'CESC_VERSION', '1.2.0' );
 define( 'CESC_FILE', __FILE__ );
 define( 'CESC_GITHUB_REPO', 'https://github.com/camelbackeastmarketing-code/ce-scan-to-call/' );
 define( 'CESC_OPTION', 'cesc_settings' );
@@ -66,7 +66,9 @@ function cesc_maybe_upgrade() {
 		return;
 	}
 	// Example for a future release:
-	// if ( version_compare( $from, '1.2.0', '<' ) ) { /* migrate old setting keys */ }
+	// if ( version_compare( $from, '1.3.0', '<' ) ) { /* migrate old setting keys */ }
+	// 1.2.0 added 'show_contact_box'; it needs no migration because
+	// cesc_get_settings() fills missing keys from cesc_defaults().
 	update_option( 'cesc_db_version', CESC_VERSION );
 }
 
@@ -92,6 +94,7 @@ function cesc_defaults() {
 		'overlay_opacity'  => 72,
 		'font_family'      => "'Playfair Display', Georgia, 'Times New Roman', serif",
 		'datalayer'        => 1,
+		'show_contact_box' => 1,
 	);
 }
 
@@ -194,6 +197,7 @@ function cesc_sanitize( $in ) {
 	$out['enabled']        = empty( $in['enabled'] ) ? 0 : 1;
 	$out['button_new_tab'] = empty( $in['button_new_tab'] ) ? 0 : 1;
 	$out['datalayer']      = empty( $in['datalayer'] ) ? 0 : 1;
+	$out['show_contact_box'] = empty( $in['show_contact_box'] ) ? 0 : 1;
 
 	$out['phone_override'] = isset( $in['phone_override'] ) ? preg_replace( '/[^0-9+]/', '', $in['phone_override'] ) : '';
 	$out['country_code']   = isset( $in['country_code'] ) ? preg_replace( '/\D/', '', $in['country_code'] ) : '1';
@@ -227,6 +231,44 @@ function cesc_admin_assets( $hook ) {
 	wp_enqueue_style( 'wp-color-picker' );
 	wp_enqueue_script( 'wp-color-picker' );
 	wp_add_inline_script( 'wp-color-picker', 'jQuery(function($){$(".cesc-color").wpColorPicker();});' );
+
+	// The contact box draws its QR code in the browser with the bundled
+	// library, so the settings page makes no external requests either.
+	$s = cesc_get_settings();
+	if ( ! empty( $s['show_contact_box'] ) && cesc_contact_box() ) {
+		wp_enqueue_script( 'cesc-qrcode-admin', plugin_dir_url( CESC_FILE ) . 'assets/qrcode.min.js', array(), CESC_VERSION, true );
+		wp_add_inline_script(
+			'cesc-qrcode-admin',
+			'(function(){var el=document.getElementById("cesc-contact-qr");if(!el||!window.CESQR){return;}var q=window.CESQR(0,"M");q.addData(el.getAttribute("data-tel"));q.make();el.innerHTML=q.createSvgTag({cellSize:4,margin:0,scalable:true});})();'
+		);
+	}
+}
+
+/**
+ * Contact details shown in the settings-page sidebar.
+ *
+ * Filter `cesc_contact_box` to change them, or return an empty value to
+ * remove the box entirely.
+ */
+function cesc_contact_box() {
+	$box = array(
+		'name'    => 'Camelback East Marketing',
+		'url'     => 'https://camelbackeast.com',
+		'phone'   => '+16027301024',
+		'display' => '(602) 730-1024',
+		'heading' => 'Questions about your site\'s phone links?',
+		'text'    => 'Scan with your phone or call.',
+	);
+	$box = apply_filters( 'cesc_contact_box', $box );
+	if ( empty( $box ) || ! is_array( $box ) ) {
+		return array();
+	}
+	$box          = wp_parse_args( $box, array( 'name' => '', 'url' => '', 'phone' => '', 'display' => '', 'heading' => '', 'text' => '' ) );
+	$box['phone'] = preg_replace( '/[^0-9+]/', '', (string) $box['phone'] );
+	if ( '' === $box['phone'] ) {
+		return array();
+	}
+	return $box;
 }
 
 function cesc_field_text( $key, $s, $placeholder = '', $desc = '' ) {
@@ -274,15 +316,36 @@ function cesc_render_page() {
 		<p><a class="button" href="<?php echo esc_url( $test_url ); ?>" target="_blank" rel="noopener">Open site in test mode</a>
 		<span class="description">Test mode forces the popup on any device. Click a phone link on the page that opens.</span></p>
 
+		<style>
+			.cesc-layout { display: flex; gap: 24px; align-items: flex-start; }
+			.cesc-main { flex: 1 1 auto; min-width: 0; }
+			.cesc-side { flex: 0 0 300px; max-width: 300px; }
+			.cesc-card { background: #fff; border: 1px solid #c3c4c7; padding: 4px 16px 14px; margin-bottom: 16px; }
+			.cesc-card h2 { font-size: 14px; margin: 14px 0 6px; padding: 0; }
+			.cesc-card ul { margin: 0 0 8px 18px; list-style: disc; }
+			.cesc-card li { margin-bottom: 6px; }
+			.cesc-card .cesc-note { background: #f6f7f7; border-left: 4px solid #2271b1; margin: 12px 0 8px; padding: 8px 10px; font-weight: 600; }
+			.cesc-card .cesc-fine { color: #646970; font-size: 12px; margin: 8px 0 0; }
+			.cesc-qr { width: 140px; height: 140px; margin: 10px 0 6px; }
+			.cesc-qr svg { width: 100%; height: 100%; display: block; }
+			@media ( max-width: 1100px ) {
+				.cesc-layout { display: block; }
+				.cesc-side { max-width: 480px; }
+			}
+		</style>
+
+		<div class="cesc-layout">
+		<div class="cesc-main">
 		<form method="post" action="options.php">
 			<?php settings_fields( 'cesc_group' ); ?>
 
 			<h2 class="title">General</h2>
 			<table class="form-table" role="presentation">
 				<tr><th scope="row">Status</th><td><?php cesc_field_check( 'enabled', $s, 'Enable the popup site-wide' ); ?></td></tr>
-				<tr><th scope="row">Phone number override</th><td><?php cesc_field_text( 'phone_override', $s, '+14807810615', 'Leave blank to use whichever phone link the visitor clicked (best when a site has more than one number). Fill in to always show one number.' ); ?></td></tr>
+				<tr><th scope="row">Popup number override (display only)</th><td><?php cesc_field_text( 'phone_override', $s, '+16027301024', 'Leave blank to use whichever phone link the visitor clicked. If filled in, the popup always shows this number. It does not change your pages or what a phone dials, so fix the phone links on your site first.' ); ?></td></tr>
 				<tr><th scope="row">Default country code</th><td><?php cesc_field_text( 'country_code', $s, '1', 'Added to 10-digit numbers with no country code. US/Canada = 1.' ); ?></td></tr>
 				<tr><th scope="row">Analytics</th><td><?php cesc_field_check( 'datalayer', $s, 'Push events to the GTM/GA4 dataLayer (scan_to_call_open, scan_to_call_close, scan_to_call_schedule_click)' ); ?></td></tr>
+				<tr><th scope="row">Contact box</th><td><?php cesc_field_check( 'show_contact_box', $s, 'Show the Camelback East contact box in the sidebar of this page' ); ?></td></tr>
 			</table>
 
 			<h2 class="title">Text &amp; button</h2>
@@ -308,6 +371,44 @@ function cesc_render_page() {
 			<?php submit_button(); ?>
 		</form>
 		<p class="description">Updates arrive through the normal Plugins screen. Use "Check for updates" next to this plugin there to check right now.</p>
+		</div>
+
+		<aside class="cesc-side">
+			<div class="cesc-card">
+				<h2>What it does</h2>
+				<ul>
+					<li>On a desktop, clicking a phone (<code>tel:</code>) link opens a popup with a QR code. The visitor scans it and calls from their phone.</li>
+					<li>Phones and tablets keep normal tap-to-call.</li>
+					<li>Optionally sends events to GTM/GA4 when the popup opens, closes, or its button is clicked.</li>
+				</ul>
+				<h2>What it doesn't do</h2>
+				<ul>
+					<li>It doesn't fix a broken or partial phone link. On a phone, the button still dials whatever the link says.</li>
+					<li>It doesn't change the numbers on your pages. The number override only changes the number shown in the popup.</li>
+					<li>It doesn't choose your number. If the site shows several numbers and you want one, fix them on the site itself.</li>
+				</ul>
+				<p class="cesc-note">Fix the site first. This plugin is a safety net, not a substitute.</p>
+				<p class="cesc-fine">Free software under the GPL-2.0-or-later, provided as-is with no warranty.</p>
+			</div>
+			<?php
+			$box = ! empty( $s['show_contact_box'] ) ? cesc_contact_box() : array();
+			if ( $box ) :
+				?>
+				<div class="cesc-card">
+					<h2><?php echo $box['url'] ? '<a href="' . esc_url( $box['url'] ) . '" target="_blank" rel="noopener">' . esc_html( $box['name'] ) . '</a>' : esc_html( $box['name'] ); ?></h2>
+					<?php if ( $box['heading'] ) : ?>
+						<p style="margin:6px 0;"><?php echo esc_html( $box['heading'] ); ?></p>
+					<?php endif; ?>
+					<div id="cesc-contact-qr" class="cesc-qr" role="img" aria-label="<?php echo esc_attr( 'QR code to call ' . ( $box['display'] ? $box['display'] : $box['phone'] ) ); ?>" data-tel="<?php echo esc_attr( 'tel:' . $box['phone'] ); ?>"></div>
+					<p style="margin:0 0 4px;"><a href="<?php echo esc_attr( 'tel:' . $box['phone'] ); ?>"><?php echo esc_html( $box['display'] ? $box['display'] : $box['phone'] ); ?></a></p>
+					<?php if ( $box['text'] ) : ?>
+						<p class="cesc-fine" style="margin-top:0;"><?php echo esc_html( $box['text'] ); ?></p>
+					<?php endif; ?>
+					<p class="cesc-fine">You can hide this box under General settings.</p>
+				</div>
+			<?php endif; ?>
+		</aside>
+		</div>
 	</div>
 	<?php
 }

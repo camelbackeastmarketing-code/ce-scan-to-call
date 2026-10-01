@@ -6,6 +6,7 @@ WordPress plugin by Camelback East Marketing. When a **desktop** visitor clicks 
 - Settings under **Settings > Scan-to-Call**: heading, button text/link, colors, font, optional fixed number.
 - Optional GTM/GA4 dataLayer events: `scan_to_call_open`, `scan_to_call_close`, `scan_to_call_schedule_click`.
 - No external requests from the popup. QR codes are generated in the browser.
+- The settings page sidebar explains what the plugin does and does not do. It does not repair broken or partial phone links, so fix the links on the site itself.
 - Add `?cesc_test=1` to any URL to force the popup on any device.
 
 ## Install
