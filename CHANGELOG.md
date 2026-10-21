@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- readme.txt: Tested up to 7.1 (the plugin has run on WordPress 7.1.3 at camelbackeast.com since 1.2.1).
+- Release build: refuses to publish if `Tested up to` is older than the current WordPress release.
+
 ## 1.2.1
 - Camelback East contact box (settings-page sidebar) and the popup number override placeholder now use (623) 456-7490 / `+16234567490`.
 

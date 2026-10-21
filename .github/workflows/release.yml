@@ -30,6 +30,21 @@ jobs:
             exit 1
           fi
 
+      - name: Check "Tested up to" against the current WordPress release
+        run: |
+          TESTED=$(grep -m1 '^Tested up to:' ce-scan-to-call/readme.txt | sed -E 's/Tested up to:[[:space:]]*//' | tr -d '[:space:]')
+          LATEST=$(curl -fsS --max-time 20 https://api.wordpress.org/core/version-check/1.7/ | jq -r '.offers[0].current' 2>/dev/null || true)
+          if [ -z "$LATEST" ] || [ "$LATEST" = "null" ]; then
+            echo "::warning::Couldn't read the current WordPress version from api.wordpress.org, so the Tested up to check was skipped."
+            exit 0
+          fi
+          LATEST_MM=$(echo "$LATEST" | cut -d. -f1,2)
+          echo "readme Tested up to=$TESTED, current WordPress=$LATEST"
+          if [ "$(printf '%s\n%s\n' "$TESTED" "$LATEST_MM" | sort -V | head -n1)" != "$LATEST_MM" ]; then
+            echo "::error::readme.txt says 'Tested up to: $TESTED' but WordPress $LATEST_MM is the current release. Test the plugin on a site running $LATEST_MM, set 'Tested up to: $LATEST_MM' in ce-scan-to-call/readme.txt, update the 'Where it is running' table on the plugin page, then re-tag (RELEASING.md, step 4). Nothing was published."
+            exit 1
+          fi
+
       - name: Build plugin zip
         run: zip -rq ce-scan-to-call.zip ce-scan-to-call -x '*.DS_Store'
 

@@ -14,6 +14,8 @@
 2. `ce-scan-to-call/ce-scan-to-call.php`: `define( 'CESC_VERSION', 'x.y.z' );`
 3. `ce-scan-to-call/readme.txt`: `Stable tag:`
 
+Then set **`Tested up to:`** in `ce-scan-to-call/readme.txt` to the WordPress version you tested on, as major.minor (for example `7.1`). On camelbackeast.com, Dashboard › Updates shows the current version. **The release build fails if this is older than the current WordPress release**, so you can't forget it.
+
 Then add a section to `CHANGELOG.md` and to the changelog in `readme.txt`.
 
 If a saved setting changed shape, add a migration in `cesc_maybe_upgrade()` and keep `cesc_defaults()` in sync.
@@ -27,6 +29,17 @@ git tag v1.1.1
 git push origin v1.1.1
 ```
 Pushing the tag triggers the **Release** workflow (Actions tab). It checks the versions match, builds `ce-scan-to-call.zip`, and publishes a GitHub release with that zip attached.
+
+**If the build fails** (Actions tab, red X), nothing was published, so it's safe to fix it and tag again. Fix the problem, then:
+```
+git add -A
+git commit -m "Fix release x.y.z"
+git push
+git tag -d vX.Y.Z
+git push origin :refs/tags/vX.Y.Z
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
 
 Don't create the release on GitHub by hand. The tag does it, and if a release for that tag already exists, the workflow fails at "Publish release".
 
@@ -43,7 +56,8 @@ The page is `/resources/ce-scan-to-call/` (page 4121). It names the version in s
 - "View vX.Y.Z Release Notes" (link and label), "What is included in vX.Y.Z?" and "PLANNED — NOT INCLUDED IN vX.Y.Z".
 - "Technical details": the zip's size in bytes and its SHA-256. Take both from the released zip, not a local build.
 - Rank Math schema (SoftwareApplication): `softwareVersion`, `downloadUrl`, `offers.url` and `releaseNotes`.
-- Check the "Where it is running" table and the "Tested up to" note while you're there.
+- **"Where it is running" table:** the WordPress and PHP version of each site listed. Take camelbackeast.com's from Dashboard › Updates.
+- The "Tested up to" note under Technical details: it must match the released zip's readme.
 
 ## Rolling back
 - Delete the bad release and its tag on GitHub (or publish a fixed higher version, which is safer).
