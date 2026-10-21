@@ -28,9 +28,22 @@ git push origin v1.1.1
 ```
 Pushing the tag triggers the **Release** workflow (Actions tab). It checks the versions match, builds `ce-scan-to-call.zip`, and publishes a GitHub release with that zip attached.
 
+Don't create the release on GitHub by hand. The tag does it, and if a release for that tag already exists, the workflow fails at "Publish release".
+
+The workflow's release notes are only a "Full Changelog" compare link. Edit the release on GitHub and paste in the version's `CHANGELOG.md` section in plain language.
+
 ## 5. Roll out
 - Sites show "Update available" within about 12 hours, or immediately after clicking **Check for updates** on the Plugins screen.
 - Update your own site first, confirm it works, then the client sites.
+
+## 6. Update the plugin page on camelbackeast.com
+The page is `/resources/ce-scan-to-call/` (page 4121). It names the version in several places, so a release isn't finished until the page matches it.
+- Version and release date: the line under the hero buttons and the "Release details" list.
+- All 5 download links (`releases/download/vX.Y.Z/ce-scan-to-call.zip`) and the 3 "Download Free Plugin — vX.Y.Z" button labels.
+- "View vX.Y.Z Release Notes" (link and label), "What is included in vX.Y.Z?" and "PLANNED — NOT INCLUDED IN vX.Y.Z".
+- "Technical details": the zip's size in bytes and its SHA-256. Take both from the released zip, not a local build.
+- Rank Math schema (SoftwareApplication): `softwareVersion`, `downloadUrl`, `offers.url` and `releaseNotes`.
+- Check the "Where it is running" table and the "Tested up to" note while you're there.
 
 ## Rolling back
 - Delete the bad release and its tag on GitHub (or publish a fixed higher version, which is safer).
