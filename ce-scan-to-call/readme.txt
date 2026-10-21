@@ -4,7 +4,7 @@ Tags: phone, tel links, qr code, popup, click to call
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 
 Desktop visitors who click a phone link get a QR-code popup so they can scan and call from their phone.
@@ -35,6 +35,9 @@ Phone links (tel:) work on phones but do nothing useful on most desktop computer
 3. Go to Settings > Scan-to-Call, set your button link and colors, and save.
 
 == Changelog ==
+
+= 1.2.1 =
+* Camelback East contact box and settings placeholder now use (623) 456-7490.
 
 = 1.2.0 =
 * Settings page sidebar: plain-language "what it does / what it doesn't do" notes, plus an optional Camelback East contact box with a QR code (drawn in the browser, no external requests). Hide the contact box under General settings.

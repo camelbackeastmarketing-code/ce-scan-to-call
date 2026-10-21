@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       CE Scan-to-Call
  * Description:       Desktop visitors who click a phone (tel:) link get a QR-code popup so they can scan and call from their phone. Phones and tablets keep normal tap-to-call.
- * Version:           1.2.0
+ * Version:           1.2.1
  * Requires at least: 5.8
  * Requires PHP:      7.4
  * Author:            Camelback East Marketing
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'CESC_VERSION', '1.2.0' );
+define( 'CESC_VERSION', '1.2.1' );
 define( 'CESC_FILE', __FILE__ );
 define( 'CESC_GITHUB_REPO', 'https://github.com/camelbackeastmarketing-code/ce-scan-to-call/' );
 define( 'CESC_OPTION', 'cesc_settings' );
@@ -254,8 +254,8 @@ function cesc_contact_box() {
 	$box = array(
 		'name'    => 'Camelback East Marketing',
 		'url'     => 'https://camelbackeast.com',
-		'phone'   => '+16027301024',
-		'display' => '(602) 730-1024',
+		'phone'   => '+16234567490',
+		'display' => '(623) 456-7490',
 		'heading' => 'Questions about your site\'s phone links?',
 		'text'    => 'Scan with your phone or call.',
 	);
@@ -342,7 +342,7 @@ function cesc_render_page() {
 			<h2 class="title">General</h2>
 			<table class="form-table" role="presentation">
 				<tr><th scope="row">Status</th><td><?php cesc_field_check( 'enabled', $s, 'Enable the popup site-wide' ); ?></td></tr>
-				<tr><th scope="row">Popup number override (display only)</th><td><?php cesc_field_text( 'phone_override', $s, '+16027301024', 'Leave blank to use whichever phone link the visitor clicked. If filled in, the popup always shows this number. It does not change your pages or what a phone dials, so fix the phone links on your site first.' ); ?></td></tr>
+				<tr><th scope="row">Popup number override (display only)</th><td><?php cesc_field_text( 'phone_override', $s, '+16234567490', 'Leave blank to use whichever phone link the visitor clicked. If filled in, the popup always shows this number. It does not change your pages or what a phone dials, so fix the phone links on your site first.' ); ?></td></tr>
 				<tr><th scope="row">Default country code</th><td><?php cesc_field_text( 'country_code', $s, '1', 'Added to 10-digit numbers with no country code. US/Canada = 1.' ); ?></td></tr>
 				<tr><th scope="row">Analytics</th><td><?php cesc_field_check( 'datalayer', $s, 'Push events to the GTM/GA4 dataLayer (scan_to_call_open, scan_to_call_close, scan_to_call_schedule_click)' ); ?></td></tr>
 				<tr><th scope="row">Contact box</th><td><?php cesc_field_check( 'show_contact_box', $s, 'Show the Camelback East contact box in the sidebar of this page' ); ?></td></tr>
